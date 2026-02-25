@@ -9,9 +9,9 @@ const LoginForm = dynamic(() => import("@/features/auth/components/login-form"),
 export default function LoginPage() {
   return (
     <div className="grid h-svh overflow-hidden lg:grid-cols-2">
-      <div className="flex flex-1 flex-col gap-4 p-6 md:p-10 bg-background">
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden p-6 md:p-10 bg-background">
+        <div className="flex min-h-full flex-col items-center justify-center py-8">
+          <div className="w-full max-w-md min-w-0 px-1">
             <LoginForm />
           </div>
         </div>

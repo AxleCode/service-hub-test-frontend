@@ -147,7 +147,7 @@ export default function LoginForm({
             ← Back to Login
           </Button>
         </div>
-        <RegisterForm />
+        <RegisterForm onNavigateToLogin={() => setShowRegister(false)} />
       </div>
     );
   }

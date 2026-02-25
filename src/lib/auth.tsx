@@ -11,9 +11,10 @@ import { useUsers } from "@/features/auth/api";
 import { AuthUser } from "@/types/auth";
 import { BaseResponse } from "@/types/base";
 
+import { toDate } from "date-fns";
 import { redirect, RedirectType } from "next/navigation";
 import { api } from "./api-client";
-import { getCookie } from "./cookies";
+import { getCookie, setCookie } from "./cookies";
 
 export const loginInputSchema = z.object({
   username: z.string().min(1, "Required"),
@@ -49,13 +50,55 @@ const logout = () => {
   return api.post(`/auth/logout`, {}, { headers: { token: token ?? "" } });
 };
 
+/** Ambil token dari berbagai bentuk response login/profile. */
+function extractTokenFromResponse(response: unknown): string | undefined {
+  const raw = response as Record<string, unknown>;
+  const data = raw?.data as Record<string, unknown> | undefined;
+  const resp = raw?.response as Record<string, unknown> | undefined;
+  const dataData = data?.data as Record<string, unknown> | undefined;
+  const token = (
+    data?.token ??
+    raw?.token ??
+    resp?.token ??
+    dataData?.token ??
+    data?.access_token ??
+    raw?.access_token
+  ) as string | undefined;
+  return typeof token === "string" && token.length > 0 ? token : undefined;
+}
+
+/** Simpan token dari response login ke cookie agar request berikutnya (GET dashboard, dll.) menyertakan header token */
+function saveLoginToken(response: unknown) {
+  const token = extractTokenFromResponse(response);
+  if (!token) return;
+
+  const raw = response as Record<string, unknown>;
+  const data = (raw?.data ?? raw) as Record<string, unknown> | undefined;
+
+  const tokenExpired = (data?.token_expired ?? raw?.token_expired) as string | undefined;
+  const expires = tokenExpired ? toDate(tokenExpired) : new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
+
+  setCookie(auth.token, token, expires);
+  if (tokenExpired) setCookie(auth.token_expired, String(tokenExpired), expires);
+
+  const refreshToken = (data?.refresh_token ?? raw?.refresh_token) as string | undefined;
+  const refreshExpired = (data?.refresh_token_expired ?? raw?.refresh_token_expired) as string | undefined;
+  if (refreshToken) {
+    const refreshExpires = refreshExpired ? toDate(refreshExpired) : expires;
+    setCookie(auth.refresh_token, refreshToken, refreshExpires);
+    if (refreshExpired) setCookie(auth.refresh_token_expired, String(refreshExpired), refreshExpires);
+  }
+}
+
 const authConfig = {
   userFn: async () => {
     const response = await getUser();
+    saveLoginToken(response);
     return response?.data;
   },
   loginFn: async (data: LoginInput) => {
     const response = await login(data);
+    saveLoginToken(response);
     return response?.data;
   },
   // notes:

@@ -2,11 +2,15 @@
 	Installed from github/Few-IT/few-it-registries/tree/master
 */
 
+const isBrowser = () => typeof document !== "undefined";
+
 export function setCookie(name: string, value: string, expires: Date): void {
+  if (!isBrowser()) return;
   document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/`;
 }
 
 export function getCookie(name: string): string | null {
+  if (!isBrowser()) return null;
   const nameEQ = name + "=";
   const ca = document.cookie.split(";");
 
@@ -19,6 +23,7 @@ export function getCookie(name: string): string | null {
 }
 
 export function clearAllCookies() {
+  if (!isBrowser()) return;
   const cookies = document.cookie.split(";");
   for (let i = 0; i < cookies.length; i++) {
     const cookie = cookies[i];

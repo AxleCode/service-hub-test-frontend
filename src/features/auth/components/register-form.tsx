@@ -15,7 +15,12 @@ import { registerInputSchema, type RegisterInput } from "@/lib/auth";
 import { register as registerApi } from "@/features/auth/api/register";
 import Link from "next/link";
 
-export default function RegisterForm() {
+type RegisterFormProps = {
+  /** Jika ada, klik "Login" akan panggil ini (untuk tampilkan form login di halaman yang sama) */
+  onNavigateToLogin?: () => void;
+};
+
+export default function RegisterForm({ onNavigateToLogin }: RegisterFormProps = {}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
@@ -53,9 +58,9 @@ export default function RegisterForm() {
 
   return (
     <Form {...form}>
-      <form className="flex flex-col gap-6" onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold">Create account</h1>
+      <form className="flex flex-col" onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="flex flex-col items-center text-center">
+          <h1 className="text-2xl mt-8 font-bold">Create account</h1>
           <p className="text-muted-foreground text-sm">Fill the form below to register.</p>
         </div>
         <div className="grid gap-4">
@@ -144,7 +149,14 @@ export default function RegisterForm() {
             {form.formState.isSubmitting ? <Loader className="animate-spin mx-auto" /> : "Register"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account? <Link href={paths.home.getHref()} className="text-primary hover:underline">Login</Link>
+            Already have an account?{" "}
+            {onNavigateToLogin ? (
+              <button type="button" onClick={onNavigateToLogin} className="text-primary hover:underline">
+                Login
+              </button>
+            ) : (
+              <Link href={paths.home.getHref()} className="text-primary hover:underline">Login</Link>
+            )}
           </p>
         </div>
       </form>
